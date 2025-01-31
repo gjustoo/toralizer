@@ -12,6 +12,9 @@
 // CONSTANTS
 #define PROXY_IP "127.0.0.1"
 #define PROXY_PORT 9050
+#define USERNAME    "toralze"
+#define reqsize sizeof(struct proxy_request) // Request size in bytes
+#define ressize sizeof(struct proxy_response) // Response size in bytes
 
 // Type definition for the packet byte size management
 typedef unsigned char int8;
@@ -53,4 +56,7 @@ struct proxy_response
     unsigned char userid[8];
 };
 
-typedef struct proxy_reponse Res;
+typedef struct proxy_response Res;
+
+Req *request(const char *, const int); // Argument naming is not needed in function declaration. Function declaration is like making an interface kindof
+int main(int, char **);
