@@ -1,9 +1,7 @@
 #include "toralize.h"
 
-// ./toralize XXX.XXX.XXX PORT
-
 // REQUEST STRUCTURE
-Req *request(const char *dstip, const int dstport)
+Req *request(struct sockaddr_in *sock2)
 {
     Req *req; // Request pointer
 
@@ -13,18 +11,19 @@ Req *request(const char *dstip, const int dstport)
 
     req->vn = 4; // same as req.vn but when using pointer to structure to grab the reference/value
     req->cd = 1;
-    req->dstport = htons(dstport);
-    req->dstip = inet_addr(dstip);
+    req->dstport = sock2->sin_port;
+    req->dstip = sock2->sin_addr.s_addr;
     strncpy(req->userid, USERNAME, 8);
 
     return req;
 }
 
-int main(int argc, char *argv[]) // argv == array of char pointers.
-
+int connect(int s2,                       // Socket file descriptor
+            const struct sockaddr *sock2, // Data to point at
+            socklen_t addrlen)
 {
-    char *host; // Pointer to host name connecting to
-    int port, s;
+
+    int s;
     struct sockaddr_in sock; // Where specify ip
     Req *req;
     Res *res;
@@ -32,17 +31,9 @@ int main(int argc, char *argv[]) // argv == array of char pointers.
     int success;       // For a Predicate ->function that returns true or false
     char tmp[512];
 
-    // Check arg quantity
+    int (*p)(int, const struct sockaddr *, socklen_t);
 
-    if (argc < 3)
-    {
-        fprintf(stderr, "Usage: %s <host> <port>\n", argv[0]);
-        return -1;
-    }
-
-    host = argv[1];
-    port = atoi(argv[2]);
-
+    p = dlsym(RTLD_NEXT, "connect");
     s = socket(AF_INET, SOCK_STREAM, 0);
 
     if (s < 0)
@@ -51,27 +42,20 @@ int main(int argc, char *argv[]) // argv == array of char pointers.
         return -1;
     }
 
+    // Connection to proxy server
     sock.sin_family = AF_INET;
     sock.sin_port = htons(PROXY_PORT);
     sock.sin_addr.s_addr = inet_addr(PROXY_IP);
 
-    printf("sock details:\n");
-    printf("Family: %d\n", sock.sin_family);
-    printf("Port: %d\n", ntohs(sock.sin_port));
-    printf("Address: %s\n", inet_ntoa(sock.sin_addr));
-
-    printf("trying to connect... \n");
-
-    if (connect(s, (struct sockaddr *)&sock, sizeof(sock)))
+    if (p(s, (struct sockaddr *)&sock, sizeof(sock)))
     {
         perror("ERROR CONNECTING!");
         return -1;
     }
 
     printf("Connected to proxy\n");
-
-    req = request(host, port); // Pointing to our packet
-    write(s, req, reqsize);    // Sending paquet using write() systemcall
+    req = request((struct sockaddr_in *)sock2); // Pointing to our packet
+    write(s, req, reqsize);                     // Sending paquet using write() systemcall
 
     // Created a buffer for the response and setting that buffered memory space to 0 to get a "clean" space
     memset(buf, 0, ressize);
@@ -93,21 +77,9 @@ int main(int argc, char *argv[]) // argv == array of char pointers.
         return -1;
     }
 
-    printf("Successfully connected through the proxy to %s:%d\n", host, port);
+    printf("Successfully connected through the proxy. \n");
 
-    memset(tmp, 0, 512);
-    snprintf(tmp, 511,
-             "HEAD / HTTP/1.0\r\n"
-             "Host: www.google.com\r\n"
-             "\r\n");
-
-    write(s, tmp, strlen(tmp));
-    memset(tmp, 0, 512);
-
-    read(s, tmp, 511);
-    printf("'%s'\n", tmp);
-
-    close(s);
+    dup2(s, s2);
     free(req);
     return 0;
 }
