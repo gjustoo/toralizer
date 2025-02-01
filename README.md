@@ -13,15 +13,15 @@ Toralize is a socksifier that proxies any command give through Tor network.
 # Usage
 
 ```
-$ toralizer <command>
-``` 
+toralizer <command>
+```
 
 # Example
 
 ```
-$ toralizer curl http://www.google.com
-``` 
+toralizer curl http://www.google.com
+```
 
 # Credits
 
-Toralizer created following Jonas Birch's tutorial [ Project: Coding a "Toralizer" in C ](https://www.youtube.com/watch?v=Pebul1c9JKE).
+Toralizer created following Jonas Birch's guide [Project: Coding a "Toralizer" in C](https://www.youtube.com/watch?v=Pebul1c9JKE).
