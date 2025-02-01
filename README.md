@@ -22,6 +22,6 @@ toralizer <command>
 toralizer curl http://www.google.com
 ```
 
-# Credits
+# Metions
 
 Toralizer created following Jonas Birch's guide [Project: Coding a "Toralizer" in C](https://www.youtube.com/watch?v=Pebul1c9JKE).
